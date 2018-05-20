@@ -1,0 +1,25 @@
+{
+  "name": "captionary",
+  "version": "1.0.0",
+  "description": "Captionary is a Discord game about getting the funniest image and caption combinations.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moriczgergo/captionary.git"
+  },
+  "author": "skiilaa",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/moriczgergo/captionary/issues"
+  },
+  "homepage": "https://github.com/moriczgergo/captionary#readme",
+  "dependencies": {
+    "discord.js": "^11.3.2",
+    "discwork": "^1.0.3",
+    "dotenv": "^5.0.1",
+    "node-cache": "^4.2.0"
+  }
+}

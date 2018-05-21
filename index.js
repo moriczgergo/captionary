@@ -1,14 +1,16 @@
 require('dotenv').config();
 
-var NodeCache = require('node-cache');
-
+const GoogleImages = require('google-images');
 var Discord = require('discord.js'); // Discord bot module
-var client = new Discord.Client(); // Initialize Discord.js client
+var gameController = require('./lib/gamecontroller');
 
+var client = new Discord.Client(); // Initialize Discord.js client
 var discwork = require('discwork')(client); // Command framework
-const gameCache = new NodeCache();
+var cse = new GoogleImages(process.env.CAPTIONARY_CSE, process.env.CAPTIONARY_CSE_KEY);
 
 var funFacts = [];
+
+const botUserID = "447797133261668373";
 
 function funFact() {
     return funFacts[Math.floor(Math.random() * funFacts.length)];
@@ -23,6 +25,9 @@ client.on('ready', function() {
         game: {
             name: "capt!onary"
         }
+    });
+    process.on('SIGINT', () => {
+        client.destroy();
     });
 });
 
@@ -118,6 +123,32 @@ discwork.add([/^capt!onary invite$/, /^capt!invite$/], function(message) { // In
         message.react("\u274C")
         console.error(err);
     });
+});
+
+discwork.add([/^capt!onary join$/, /^capt!join$/], function(message) {
+    gameController.joinGame(message);
+});
+
+discwork.add([/^capt!onary start$/, /^capt!start$/], function(message) {
+    gameController.startGame(message);
+});
+
+discwork.add([/./], function(message, matches) {
+    if (message.channel.type == "dm" && message.author.id != botUserID) {
+        console.log("DC: Got message, sending it over to the game controller...");
+        /*cse.search(message.content, {page: 1, safe: "high"}).then(function(results) {
+            if (results.length == 0) {
+                    message.reply("No results. Did you search for something dirty?");
+                    return;
+            }
+            var pick = Math.floor(Math.random() * results.length);
+            message.reply(`Here's the ${pick+1}${pick+1 == 1 ? "st" : pick+1 == 2 ? "nd" : pick+1 == 3 ? "rd" : "th"} image from the results:\n${results[pick].url}`);
+        }).catch(function(err) {
+            message.react("\u274C")
+            console.error(err);
+        });*/
+        gameController.input(message);
+    }
 });
 
 discwork.done();

@@ -4,6 +4,7 @@
   "description": "Captionary is a Discord game about getting the funniest image and caption combinations.",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,9 +18,12 @@
   },
   "homepage": "https://github.com/moriczgergo/captionary#readme",
   "dependencies": {
+    "deasync": "^0.1.13",
     "discord.js": "^11.3.2",
     "discwork": "^1.0.3",
     "dotenv": "^5.0.1",
+    "google-images": "^2.1.0",
+    "nanoid": "^1.0.2",
     "node-cache": "^4.2.0"
   }
 }

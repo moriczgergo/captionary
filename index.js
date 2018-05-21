@@ -1,5 +1,10 @@
 require('dotenv').config();
 
+var kttn = require('kttnkndy')('bot', {
+    showInitializedMessage: false,
+    timestampedLog: false
+});
+
 const GoogleImages = require('google-images');
 var Discord = require('discord.js'); // Discord bot module
 var gameController = require('./lib/gamecontroller');
@@ -61,7 +66,7 @@ discwork.add([/^capt!onary$/i, /^capt!$/i], function(message) { // Help message
         if (message.channel.type != "dm") message.react("\ud83d\ude4c"); // React with :raised_hands:
     }).catch(function(err) { // error
         message.react("\u274C"); // React with :x:
-        console.error(err);
+        kttn.error(JSON.stringify(err));
     });
 });
 
@@ -121,7 +126,7 @@ discwork.add([/^capt!onary invite$/, /^capt!invite$/], function(message) { // In
         }
     }).catch(function(err) {
         message.react("\u274C")
-        console.error(err);
+        kttn.error(JSON.stringify(err));
     });
 });
 
@@ -135,7 +140,7 @@ discwork.add([/^capt!onary start$/, /^capt!start$/], function(message) {
 
 discwork.add([/./], function(message, matches) {
     if (message.channel.type == "dm" && message.author.id != botUserID) {
-        console.log("DC: Got message, sending it over to the game controller...");
+        kttn.log("Got message, sending it over to the game controller...");
         /*cse.search(message.content, {page: 1, safe: "high"}).then(function(results) {
             if (results.length == 0) {
                     message.reply("No results. Did you search for something dirty?");

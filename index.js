@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+var Raven = require('raven');
 var kttn = require('kttnkndy')('bot', {
     showInitializedMessage: false,
     timestampedLog: false
@@ -12,6 +13,9 @@ var gameController = require('./lib/gamecontroller');
 var client = new Discord.Client(); // Initialize Discord.js client
 var discwork = require('discwork')(client); // Command framework
 var cse = new GoogleImages(process.env.CAPTIONARY_CSE, process.env.CAPTIONARY_CSE_KEY);
+Raven.config(process.env.CAPTIONARY_DSN, {
+    autoBreadcrumbs: true
+}).install();
 
 var funFacts = [];
 
@@ -34,6 +38,7 @@ client.on('ready', function() {
     process.on('SIGINT', () => {
         client.destroy();
     });
+    kttn.log(`Bot up and running! ${client.user.tag}`);
 });
 
 discwork.add([/^capt!onary$/i, /^capt!$/i], function(message) { // Help message
@@ -67,6 +72,7 @@ discwork.add([/^capt!onary$/i, /^capt!$/i], function(message) { // Help message
     }).catch(function(err) { // error
         message.react("\u274C"); // React with :x:
         kttn.error(JSON.stringify(err));
+        Raven.captureException(err, { extra: { message } });
     });
 });
 
@@ -116,7 +122,11 @@ discwork.add([/^capt!onary guide$/, /^capt!guide$/], function(message) {
                 text: "\uD83D\uDCA1 Fun fact: " + funFact()
             }
         }
-    })
+    }).catch(function(err) {
+        message.react("\u274C")
+        kttn.error(JSON.stringify(err));
+        Raven.captureException(err, { extra: { message } });
+    });
 });
 
 discwork.add([/^capt!onary invite$/, /^capt!invite$/], function(message) { // Invite link
@@ -127,6 +137,7 @@ discwork.add([/^capt!onary invite$/, /^capt!invite$/], function(message) { // In
     }).catch(function(err) {
         message.react("\u274C")
         kttn.error(JSON.stringify(err));
+        Raven.captureException(err, { extra: { message } });
     });
 });
 

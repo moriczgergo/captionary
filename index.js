@@ -12,14 +12,10 @@ var gameController = require('./lib/gamecontroller');
 
 var client = new Discord.Client(); // Initialize Discord.js client
 var discwork = require('discwork')(client); // Command framework
-var cse = new GoogleImages(process.env.CAPTIONARY_CSE, process.env.CAPTIONARY_CSE_KEY);
-Raven.config(process.env.CAPTIONARY_DSN, {
-    autoBreadcrumbs: true
-}).install();
+var cse = new GoogleImages(process.env.CAPTIONARY_CSE, process.env.CAPTIONARY_CSE_KEY); // Google image search
+Raven.config(process.env.CAPTIONARY_DSN).install(); // Error reporting
 
-var funFacts = [];
-
-const botUserID = "447797133261668373";
+var funFacts = []; // Will be filled up later by client.on('ready')
 
 function funFact() {
     return funFacts[Math.floor(Math.random() * funFacts.length)];
@@ -35,14 +31,14 @@ client.on('ready', function() {
             name: "capt!onary"
         }
     });
-    process.on('SIGINT', () => {
+    process.on('SIGINT', () => { // Somewhat-graceful exit.
         client.destroy();
     });
     kttn.log(`Bot up and running! ${client.user.tag}`);
 });
 
-discwork.add([/^capt!onary$/i, /^capt!$/i], function(message) { // Help message
-    message.author.send({
+discwork.add([/^capt!onary$/i, /^capt!$/i], function(message) { // Help command
+    message.author.send({ // Sending special embed message
         embed: {
             title: "Commands",
             description: "If you're looking for a Captionary game guide, check out `capt!onary guide`.",
@@ -63,7 +59,7 @@ discwork.add([/^capt!onary$/i, /^capt!$/i], function(message) { // Help message
                     inline: true
                 }
             ],
-            footer: {
+            footer: { // Fun fact
                 text: "\uD83D\uDCA1 Fun fact: " + funFact()
             }
         }
@@ -71,17 +67,17 @@ discwork.add([/^capt!onary$/i, /^capt!$/i], function(message) { // Help message
         if (message.channel.type != "dm") message.react("\ud83d\ude4c"); // React with :raised_hands:
     }).catch(function(err) { // error
         message.react("\u274C"); // React with :x:
-        kttn.error(JSON.stringify(err));
-        Raven.captureException(err, { extra: { message } });
+        console.log(err);
+        Raven.captureException(err, { extra: { message } }); // Report error
     });
 });
 
-discwork.add([/^capt!onary guide$/, /^capt!guide$/], function(message) {
-    message.author.send({
+discwork.add([/^capt!onary guide$/i, /^capt!guide$/i], function(message) { // Guide command
+    message.author.send({ // Send special embed message
         embed: {
             title: "Guide",
             description: "Captionary is a Discord game about getting the funniest image and caption combinations.\nPlayers: 4-8\n",
-            fields: [
+            fields: [ // Each field is like a heading in a document.
                 {
                     name: "Teams",
                     value: "Captionary has two teams:\n * the Imagers\n * the Captioners\n\n"
@@ -118,39 +114,45 @@ discwork.add([/^capt!onary guide$/, /^capt!guide$/], function(message) {
                     value: "TBD"
                 }
             ],
-            footer: {
+            footer: { // Fun fact footer
                 text: "\uD83D\uDCA1 Fun fact: " + funFact()
             }
         }
     }).catch(function(err) {
-        message.react("\u274C")
-        kttn.error(JSON.stringify(err));
-        Raven.captureException(err, { extra: { message } });
+        message.react("\u274C") // Rect with :x:
+        console.log(err);
+        Raven.captureException(err, { extra: { message } }); // Report error
     });
 });
 
-discwork.add([/^capt!onary invite$/, /^capt!invite$/], function(message) { // Invite link
-    message.author.send("Hey! Thanks for considering adding Captionary to your server. You can do so here: https://captionary.skiilaa.me/add\n\n\uD83D\uDCA1 Fun fact: " + funFact()).then(function() {
-        if (message.channel.type != "dm") {
-            message.react("\ud83d\ude4c");
+discwork.add([/^capt!onary invite$/i, /^capt!invite$/i], function(message) { // Invite command
+    message.author.send("Hey! Thanks for considering adding Captionary to your server. You can do so here: https://captionary.skiilaa.me/add\n\n\uD83D\uDCA1 Fun fact: " + funFact()).then(function() { // Send invite link & fun fact in the DMs
+        if (message.channel.type != "dm") { // If we aren't in the DMs
+            message.react("\ud83d\ude4c"); // Send :raised_hands: as a signal that the message has been sent.
         }
     }).catch(function(err) {
-        message.react("\u274C")
-        kttn.error(JSON.stringify(err));
-        Raven.captureException(err, { extra: { message } });
+        message.react("\u274C") // React with :x:
+        console.log(err);
+        Raven.captureException(err, { extra: { message } }); // Report error
     });
 });
 
-discwork.add([/^capt!onary join$/, /^capt!join$/], function(message) {
-    gameController.joinGame(message);
+discwork.add([/^capt!onary join$/i, /^capt!join$/i], function(message) { // Join command
+    gameController.joinGame(message); // Call the gamecontroller
 });
 
-discwork.add([/^capt!onary start$/, /^capt!start$/], function(message) {
-    gameController.startGame(message);
+discwork.add([/^capt!onary start$/i, /^capt!start$/i], function(message) { // Start command
+    gameController.startGame(message); // Call the gamecontroller
 });
 
-discwork.add([/./], function(message, matches) {
-    if (message.channel.type == "dm" && message.author.id != botUserID) {
+discwork.add([/^capt!onary leave$/i, /^capt!leave$/i], function(message) { // Leave command
+    gameController.leaveGame(message); // Call the gamecontroller
+});
+
+discwork.add([/./], function(message, matches) { // Any input
+    if (message.channel.type == "dm" && message.author.id != client.user.id) { // If it's in the DMs and it is not send by the bot
+        // ANSWER PROCESSING
+
         kttn.log("Got message, sending it over to the game controller...");
         /*cse.search(message.content, {page: 1, safe: "high"}).then(function(results) {
             if (results.length == 0) {
@@ -163,10 +165,10 @@ discwork.add([/./], function(message, matches) {
             message.react("\u274C")
             console.error(err);
         });*/
-        gameController.input(message);
+        gameController.input(message); // Call the gamecontroller
     }
 });
 
-discwork.done();
+discwork.done(); // Finalize our command list
 
 client.login(process.env.CAPTIONARY_TOKEN);
